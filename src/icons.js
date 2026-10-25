@@ -89,6 +89,12 @@ export function createIcons(React) {
   // Save / Disk
   const Save = svg("M2 1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H9.5a1 1 0 0 0-1 1v7.293l2.646-2.647a.5.5 0 0 1 .708.708l-3.5 3.5a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L7.5 9.293V2a2 2 0 0 1 2-2H14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h2.5a.5.5 0 0 1 0 1H2z");
 
+  // Alert / Warning Triangle
+  const Alert = svg("M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z");
+
+  // Info Circle
+  const Info = svg("M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z M8.93 6.588l-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z");
+
   // PlatformIO Alien Logo
   function PioLogo(props) {
     const size = props.size || 14;
@@ -103,7 +109,7 @@ export function createIcons(React) {
     }));
   }
 
-  return {
+  const iconsMap = {
     Build,
     Upload,
     Serial,
@@ -126,6 +132,17 @@ export function createIcons(React) {
     Check,
     Edit,
     Save,
+    Alert,
+    Warning: Alert,
+    Info,
     PioLogo
   };
+
+  return new Proxy(iconsMap, {
+    get(target, prop) {
+      if (prop in target) return target[prop];
+      console.warn('[dsh-pio] Icon not found, using Info fallback:', prop);
+      return Info;
+    }
+  });
 }

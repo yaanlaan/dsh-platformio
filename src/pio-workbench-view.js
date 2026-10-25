@@ -316,7 +316,8 @@ export function createPioWorkbenchComponent(React, Icons) {
       name: 'esp32-project',
       board: 'esp32doit-devkit-v1',
       framework: 'arduino',
-      dir: 'C:\\Users\\yaan\\Documents\\deepseek'
+      dir: '',
+      inPlace: false
     });
     const [isCreatingProject, setIsCreatingProject] = useState(false);
     const [isAddEnvOpen, setIsAddEnvOpen] = useState(false);
@@ -465,7 +466,18 @@ export function createPioWorkbenchComponent(React, Icons) {
     // Fetch Project Info & Initial State
     const refreshInfo = useCallback(async () => {
       try {
-        const res = await fetch('/api/pio/info');
+        let activeSessionCwd = '';
+        try {
+          // Detect active session working directory from DSH GUI state if available
+          const pathSegments = window.location.pathname.split('/');
+          const sIdx = pathSegments.indexOf('session');
+          const sessionId = sIdx !== -1 ? pathSegments[sIdx + 1] : null;
+          if (sessionId) {
+            activeSessionCwd = `?sessionId=${encodeURIComponent(sessionId)}`;
+          }
+        } catch (e) {}
+
+        const res = await fetch(`/api/pio/info${activeSessionCwd}`);
         if (res.ok) {
           const data = await res.json();
           if (data.project) setProjectInfo(data.project);
@@ -1615,13 +1627,16 @@ export function createPioWorkbenchComponent(React, Icons) {
                 h('button', {
                   className: 'dsh-pio-btn dsh-pio-btn-primary',
                   onClick: () => {
-                    const currentDir = projectInfo?.dir || projectInfo?.projectPath || 'C:\\Users\\yaan\\Documents\\deepseek';
-                    const parentDir = currentDir.includes('\\') ? currentDir.substring(0, currentDir.lastIndexOf('\\')) : currentDir;
+                    const currentDir = projectInfo?.dir || projectInfo?.projectPath || '';
+                    const parentDir = currentDir.includes('\\')
+                      ? currentDir.substring(0, currentDir.lastIndexOf('\\'))
+                      : (currentDir.includes('/') ? currentDir.substring(0, currentDir.lastIndexOf('/')) : currentDir);
                     setNewProjectForm(prev => ({
                       name: 'esp32-app-' + Math.floor(100 + Math.random() * 900),
                       board: projectInfo?.board || prev.board || 'esp32doit-devkit-v1',
                       framework: projectInfo?.framework || prev.framework || 'arduino',
-                      dir: parentDir || 'C:\\Users\\yaan\\Documents\\deepseek'
+                      dir: projectInfo?.isPio ? (parentDir || currentDir) : currentDir,
+                      inPlace: !projectInfo?.isPio
                     }));
                     setIsNewProjectOpen(true);
                   },
@@ -1666,7 +1681,44 @@ export function createPioWorkbenchComponent(React, Icons) {
                 onClick: refreshProjects,
                 title: '扫描 PlatformIO 工程'
               }, h(Icons.Refresh, { size: 10 }), '扫描')
-            )
+            ),
+
+            // Non-PIO Project Guide Banner
+            (!projectInfo?.isPio && projectInfo?.dir) ? h('div', {
+              style: {
+                marginTop: '12px',
+                padding: '10px 14px',
+                borderRadius: '6px',
+                background: 'rgba(243, 156, 18, 0.1)',
+                border: '1px solid rgba(243, 156, 18, 0.3)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '12px'
+              }
+            },
+              h('div', { style: { display: 'flex', alignItems: 'center', gap: '8px' } },
+                h(Icons.Alert, { size: 16, style: { color: '#f39c12', flexShrink: 0 } }),
+                h('div', { style: { fontSize: '12px', color: '#ddd' } },
+                  h('strong', { style: { color: '#f39c12' } }, '当前目录未检测到 platformio.ini 配置文件。'),
+                  h('div', { style: { fontSize: '11px', color: '#aaa', marginTop: '2px' } },
+                    `目录 [${projectInfo.dir}] 尚未初始化为嵌入式项目。您可以一键在此目录下初始化 PlatformIO 工程。`
+                  )
+                )
+              ),
+              h('button', {
+                className: 'dsh-pio-btn dsh-pio-btn-primary',
+                style: { height: '26px', padding: '0 12px', fontSize: '11px', flexShrink: 0 },
+                onClick: () => {
+                  setNewProjectForm(prev => ({
+                    ...prev,
+                    dir: projectInfo.dir,
+                    inPlace: true
+                  }));
+                  setIsNewProjectOpen(true);
+                }
+              }, h(Icons.Plus, { size: 11 }), '在此目录初始化工程')
+            ) : null
           ),
 
           // Feedback Banner if save successful / error
@@ -2087,10 +2139,22 @@ export function createPioWorkbenchComponent(React, Icons) {
                 className: 'dsh-pio-input',
                 value: newProjectForm.dir,
                 onChange: (e) => setNewProjectForm(prev => ({ ...prev, dir: e.target.value })),
-                placeholder: '例如: C:\\Users\\yaan\\Documents\\deepseek'
+                placeholder: '目标目录，留空默认为当前工作区'
               }),
-              h('div', { style: { fontSize: '10px', color: 'var(--dsw-alias-label-secondary, #888)' } },
-                `${newProjectForm.dir ? (newProjectForm.dir.endsWith('\\') ? newProjectForm.dir : newProjectForm.dir + '\\') : ''}${newProjectForm.name || ''}`
+              h('div', { style: { display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px' } },
+                h('label', { style: { display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: '#ccc', cursor: 'pointer' } },
+                  h('input', {
+                    type: 'checkbox',
+                    checked: !!newProjectForm.inPlace,
+                    onChange: (e) => setNewProjectForm(prev => ({ ...prev, inPlace: e.target.checked }))
+                  }),
+                  '直接在目标目录下初始化 (不创建子文件夹)'
+                )
+              ),
+              h('div', { style: { fontSize: '10px', color: 'var(--dsw-alias-label-secondary, #888)', marginTop: '4px' } },
+                '生成路径: ' + (newProjectForm.inPlace
+                  ? (newProjectForm.dir || '当前目录')
+                  : `${newProjectForm.dir ? (newProjectForm.dir.endsWith('\\') || newProjectForm.dir.endsWith('/') ? newProjectForm.dir : newProjectForm.dir + '\\') : ''}${newProjectForm.name || ''}`)
               )
             )
           ),
