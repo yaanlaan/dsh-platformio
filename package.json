@@ -1,0 +1,61 @@
+{
+  "name": "ds-platformio",
+  "version": "1.0.0",
+  "description": "DeepSeek Harness PlatformIO IDE 插件 - 提供嵌入式与 ESP32/STM32 编译、烧录、调试、运行、串口监视与项目可视化管理 (PlatformIO IDE for DeepSeek Harness)",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js"
+  },
+  "scripts": {
+    "build": "node build.mjs"
+  },
+  "engines": {
+    "node": ">=20",
+    "dsh": "^0.2.0"
+  },
+  "dsh": {
+    "manifestVersion": 1,
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-sidebar-right",
+        "@deepseek-ai/dsh-client-ui-sidebar",
+        "@deepseek-ai/dsh-client-ui-renderer",
+        "@deepseek-ai/dsh-client-ui-session",
+        "@deepseek-ai/dsh-client-ui-primitives",
+        "@deepseek-ai/dsh-client-ui-layout"
+      ],
+      "platform": "web",
+      "immediately": true
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yaanlaan/ds-platformio.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yaanlaan/ds-platformio/issues"
+  },
+  "homepage": "https://github.com/yaanlaan/ds-platformio#readme",
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "~4.0.5"
+  },
+  "keywords": [
+    "deepseek",
+    "deepseek-harness",
+    "dsh-plugin",
+    "platformio",
+    "pio",
+    "esp32",
+    "stm32",
+    "embedded",
+    "serial",
+    "ds-platformio"
+  ],
+  "author": "yaan",
+  "license": "MIT"
+}
