@@ -1,5 +1,5 @@
 {
-  "name": "ds-platformio",
+  "name": "dsh-platformio",
   "version": "1.0.0",
   "description": "DeepSeek Harness PlatformIO IDE 插件 - 提供嵌入式与 ESP32/STM32 编译、烧录、调试、运行、串口监视与项目可视化管理 (PlatformIO IDE for DeepSeek Harness)",
   "type": "module",
@@ -35,12 +35,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yaanlaan/ds-platformio.git"
+    "url": "git+https://github.com/yaanlaan/dsh-platformio.git"
   },
   "bugs": {
-    "url": "https://github.com/yaanlaan/ds-platformio/issues"
+    "url": "https://github.com/yaanlaan/dsh-platformio/issues"
   },
-  "homepage": "https://github.com/yaanlaan/ds-platformio#readme",
+  "homepage": "https://github.com/yaanlaan/dsh-platformio#readme",
   "peerDependencies": {
     "@deepseek-ai/cordis": "~4.0.5"
   },
@@ -54,7 +54,7 @@
     "stm32",
     "embedded",
     "serial",
-    "ds-platformio"
+    "dsh-platformio"
   ],
   "author": "yaan",
   "license": "MIT"

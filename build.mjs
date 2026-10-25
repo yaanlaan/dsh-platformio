@@ -16,7 +16,7 @@ const workbenchContent = workbenchViewRaw
   .replaceAll('export function ', 'function ')
   .replaceAll('export const ', 'const ');
 
-const clientBundle = `// DeepSeek Harness ds-platformio Plugin - Client Bundle (Zero Emojis, Native Bottom Panel & Sidebar)
+const clientBundle = `// DeepSeek Harness dsh-platformio Plugin - Client Bundle (Zero Emojis, Native Bottom Panel & Sidebar)
 (function() {
   function factory(require) {
     var module = { exports: {} };
@@ -32,7 +32,7 @@ const clientBundle = `// DeepSeek Harness ds-platformio Plugin - Client Bundle (
 
     function installUiStyles() {
       if (typeof document === 'undefined') return;
-      const STYLE_ID = 'ds-platformio-styles';
+      const STYLE_ID = 'dsh-platformio-styles';
       let el = document.getElementById(STYLE_ID);
       if (!el) {
         el = document.createElement('style');
@@ -55,8 +55,8 @@ const clientBundle = `// DeepSeek Harness ds-platformio Plugin - Client Bundle (
 
     const PioWorkbenchView = createPioWorkbenchComponent(React, Icons);
 
-    const PLUGIN_ID = "ds-platformio";
-    const TAB_KIND = "ds-platformio";
+    const PLUGIN_ID = "dsh-platformio";
+    const TAB_KIND = "dsh-platformio";
 
     // ==========================================
     // 4. Plugin Injection & Lifecycle
@@ -134,12 +134,12 @@ const clientBundle = `// DeepSeek Harness ds-platformio Plugin - Client Bundle (
       }
 
       // 2. Right Sidebar Tab Content & Title
-      ["ds-platformio", "dsh-pio", "pio", "platformio"].forEach(key => {
+      ["dsh-platformio", "ds-platformio", "dsh-pio", "pio", "platformio"].forEach(key => {
         try {
           ctx.effect(() => ctx.slots.inject("sidebar.right.pane.tab", () => ctx.slots.register({
             name: "sidebar.right.pane.tab",
             key
-          }, (slotProps) => React.createElement(PioWorkbenchView, { ...slotProps, ctx }))), "ds-platformio: tab body " + key);
+          }, (slotProps) => React.createElement(PioWorkbenchView, { ...slotProps, ctx }))), "dsh-platformio: tab body " + key);
 
           ctx.effect(() => ctx.slots.inject("sidebar.right.pane.tab.title", () => ctx.slots.register({
             name: "sidebar.right.pane.tab.title",
@@ -147,9 +147,9 @@ const clientBundle = `// DeepSeek Harness ds-platformio Plugin - Client Bundle (
           }, () => React.createElement('span', { style: { display: 'inline-flex', alignItems: 'center', gap: 6 } },
             React.createElement(Icons.PioLogo, { size: 14 }),
             React.createElement('span', null, 'PlatformIO')
-          ))), "ds-platformio: tab title " + key);
+          ))), "dsh-platformio: tab title " + key);
         } catch (err) {
-          console.warn('[ds-platformio] slots register sidebar tab:', err);
+          console.warn('[dsh-platformio] slots register sidebar tab:', err);
         }
       });
     }
@@ -163,13 +163,16 @@ const clientBundle = `// DeepSeek Harness ds-platformio Plugin - Client Bundle (
   }
 
   // Register in ModuleLoader with idempotent guards
-  if (!window.__ds_platformio_registered__) {
-    window.__ds_platformio_registered__ = true;
+  if (!window.__dsh_platformio_registered__) {
+    window.__dsh_platformio_registered__ = true;
+    try {
+      window.__ModuleLoader__.load({ id: "dsh-platformio", factory });
+    } catch (e) {
+      console.warn('[dsh-platformio] ModuleLoader load dsh-platformio:', e);
+    }
     try {
       window.__ModuleLoader__.load({ id: "ds-platformio", factory });
-    } catch (e) {
-      console.warn('[ds-platformio] ModuleLoader load ds-platformio:', e);
-    }
+    } catch (e) {}
     try {
       window.__ModuleLoader__.load({ id: "dsh-pio", factory });
     } catch (e) {}

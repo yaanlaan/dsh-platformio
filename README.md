@@ -1,4 +1,4 @@
-# ds-platformio
+# dsh-platformio
 
 PlatformIO IDE plugin for **DeepSeek Harness** (Desktop & Web).  
 深度集成于 DeepSeek Harness 原生下边栏与侧边栏中，全功能复刻 VSCode PlatformIO IDE 的嵌入式开发体验。支持 ESP32、ESP8266、STM32、Raspberry Pi Pico、AVR 等全系列微控制器的**编译、烧录、调试、运行、串口监视、环境管理与项目配置可视化**。
@@ -66,11 +66,11 @@ PlatformIO IDE plugin for **DeepSeek Harness** (Desktop & Web).
 2. 点击 **添加插件** -> **安装第三方插件**。
 3. 在输入框中填入 GitHub 仓库地址：
    ```text
-   github:yaanlaan/ds-platformio
+   github:yaanlaan/dsh-platformio
    ```
    或
    ```text
-   https://github.com/yaanlaan/ds-platformio
+   https://github.com/yaanlaan/dsh-platformio
    ```
 4. 点击 **安装**，安装完成后即可在下侧面板看到 **PlatformIO** 标签页。
 
@@ -82,25 +82,25 @@ PlatformIO IDE plugin for **DeepSeek Harness** (Desktop & Web).
 
 1. 克隆代码至本地目录：
    ```bash
-   git clone https://github.com/yaanlaan/ds-platformio.git C:/Users/<YourUser>/Documents/deepseek/ds-platformio
+   git clone https://github.com/yaanlaan/dsh-platformio.git C:/Users/<YourUser>/Documents/deepseek/extension/dsh-platformio
    ```
 
 2. 在你的 DSH Profile 目录（如 `~/.dsh/profiles/desktop`）创建软链接：
    ```powershell
    # Windows PowerShell (管理员或开启开发者模式):
-   New-Item -ItemType Junction -Target "C:\Users\<YourUser>\Documents\deepseek\ds-platformio" -Path "C:\Users\<YourUser>\.dsh\profiles\desktop\node_modules\ds-platformio"
+   New-Item -ItemType Junction -Target "C:\Users\<YourUser>\Documents\deepseek\extension\dsh-platformio" -Path "C:\Users\<YourUser>\.dsh\profiles\desktop\node_modules\dsh-platformio"
    ```
 
-3. 将 `ds-platformio` 登记至 `~/.dsh/profiles/desktop/package.json`：
+3. 将 `dsh-platformio` 登记至 `~/.dsh/profiles/desktop/package.json`：
    ```json
    {
      "dependencies": {
-       "ds-platformio": "link:C:/Users/<YourUser>/Documents/deepseek/ds-platformio"
+       "dsh-platformio": "link:C:/Users/<YourUser>/Documents/deepseek/extension/dsh-platformio"
      },
      "dsh": {
        "profile": {
          "bundles": [
-           "ds-platformio"
+           "dsh-platformio"
          ]
        }
      }
