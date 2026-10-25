@@ -747,6 +747,30 @@ export const PIO_STYLES = `
   flex-shrink: 0;
 }
 
+/* --- Directory Picker Component Styles --- */
+.dsh-pio-dir-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid transparent;
+  transition: background 0.15s, border-color 0.15s;
+}
+.dsh-pio-dir-item:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+.dsh-pio-dir-item.selected {
+  background: rgba(78, 201, 176, 0.12);
+  border-color: rgba(78, 201, 176, 0.4);
+}
+.dsh-pio-dir-item.is-pio {
+  border-left: 3px solid #e67e22;
+}
+
 /* --- Media Queries for Narrow Widths / Sidebar --- */
 @media (max-width: 720px) {
   .dsh-pio-topbar {

@@ -55,6 +55,19 @@ export function createIcons(React) {
 
   // Project Folder
   const Project = svg("M.54 3.87.5 3a2 2 0 0 1 2-2h3.672a2 2 0 0 1 1.414.586l.828.828A2 2 0 0 0 9.828 3h4.672a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2.5a2 2 0 0 1-2-2V3.87zm1 1.13V13a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V5H2a1 1 0 0 0-.46.11zM2.5 2a1 1 0 0 0-1 1v.058c.15-.038.307-.058.46-.058H9.828a3 3 0 0 1 2.122-.879l-.828-.828A1 1 0 0 0 10.414 1H2.5z");
+  const Folder = Project;
+
+  // Arrow Up / Level Up
+  const ArrowUp = svg("M8 15a.5.5 0 0 0 .5-.5V2.707l3.146 3.147a.5.5 0 0 0 .708-.708l-4-4a.5.5 0 0 0-.708 0l-4 4a.5.5 0 1 0 .708.708L7.5 2.707V14.5a.5.5 0 0 0 .5.5z");
+
+  // Home
+  const Home = svg("M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L2 8.207V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5V8.207l.646.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293L8.707 1.5Z");
+
+  // Hard Drive / Disk
+  const HardDrive = svg("M2 2a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H2zm0 1h12a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zm10.5 7a.5.5 0 1 0 0 1 .5.5 0 0 0 0-1zm-2 0a.5.5 0 1 0 0 1 .5.5 0 0 0 0-1z");
+
+  // History / Recent
+  const History = svg("M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z");
 
   // Plus / New
   const Plus = svg("M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2z");
@@ -120,6 +133,11 @@ export function createIcons(React) {
     Stop,
     Send,
     Project,
+    Folder,
+    ArrowUp,
+    Home,
+    HardDrive,
+    History,
     Plus,
     Library,
     Search,

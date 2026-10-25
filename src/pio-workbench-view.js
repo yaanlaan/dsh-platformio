@@ -328,6 +328,22 @@ export function createPioWorkbenchComponent(React, Icons) {
       platform: 'espressif32'
     });
 
+    // Directory Selector & Filesystem Browser State
+    const [isDirPickerOpen, setIsDirPickerOpen] = useState(false);
+    const [dirPickerMode, setDirPickerMode] = useState('switch-workspace'); // 'switch-workspace' | 'new-project-dir'
+    const [dirPickerData, setDirPickerData] = useState({
+      current: '',
+      parent: null,
+      directories: [],
+      drives: [],
+      favorites: [],
+      recentProjects: [],
+      isPio: false
+    });
+    const [dirPickerPathInput, setDirPickerPathInput] = useState('');
+    const [dirPickerSelected, setDirPickerSelected] = useState('');
+    const [dirPickerLoading, setDirPickerLoading] = useState(false);
+
     // Configuration View Mode & Active Environment
     const [configViewMode, setConfigViewMode] = useState('visual'); // 'visual' or 'raw'
     const [selectedEnvName, setSelectedEnvName] = useState('');
@@ -616,6 +632,68 @@ export function createPioWorkbenchComponent(React, Icons) {
         setIsSwitchingWorkspace(false);
       }
     }, [refreshProjects, appendTaskEntries]);
+
+    // Open Directory Selector & Filesystem Browser
+    const openDirPicker = useCallback(async (mode = 'switch-workspace', initialPath = '') => {
+      setDirPickerMode(mode);
+      setIsDirPickerOpen(true);
+      const startPath = initialPath || projectInfo?.dir || '';
+      setDirPickerPathInput(startPath);
+      setDirPickerSelected(startPath);
+      setDirPickerLoading(true);
+      try {
+        const query = startPath ? `?dir=${encodeURIComponent(startPath)}` : '';
+        const res = await fetch(`/api/pio/fs/browse${query}`);
+        if (res.ok) {
+          const data = await res.json();
+          setDirPickerData(data);
+          setDirPickerPathInput(data.current || '');
+          setDirPickerSelected(data.current || '');
+        }
+      } catch (e) {
+        console.warn('[dsh-pio] browse directory error:', e);
+      } finally {
+        setDirPickerLoading(false);
+      }
+    }, [projectInfo]);
+
+    // Navigate to a specific path in Directory Selector
+    const navigateToDir = useCallback(async (targetPath) => {
+      if (!targetPath) return;
+      setDirPickerLoading(true);
+      try {
+        const res = await fetch(`/api/pio/fs/browse?dir=${encodeURIComponent(targetPath)}`);
+        if (res.ok) {
+          const data = await res.json();
+          setDirPickerData(data);
+          setDirPickerPathInput(data.current || '');
+          setDirPickerSelected(data.current || '');
+        }
+      } catch (e) {
+        console.warn('[dsh-pio] navigate dir error:', e);
+      } finally {
+        setDirPickerLoading(false);
+      }
+    }, []);
+
+    // Confirm Directory Selection
+    const handleConfirmDirPicker = useCallback(async () => {
+      const chosenPath = dirPickerSelected || dirPickerPathInput;
+      if (!chosenPath) return;
+
+      if (dirPickerMode === 'new-project-dir') {
+        setNewProjectForm(prev => ({
+          ...prev,
+          dir: chosenPath
+        }));
+        setIsDirPickerOpen(false);
+        return;
+      }
+
+      // Default: switch workspace
+      setIsDirPickerOpen(false);
+      await handleSwitchWorkspace(chosenPath);
+    }, [dirPickerSelected, dirPickerPathInput, dirPickerMode, handleSwitchWorkspace]);
 
     // Create New Project Wizard
     const handleCreateProject = useCallback(async () => {
@@ -1659,11 +1737,11 @@ export function createPioWorkbenchComponent(React, Icons) {
             ),
 
             // Active Project Workspace Info & Switcher
-            h('div', { style: { display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', fontSize: '12px' } },
+            h('div', { style: { display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', fontSize: '12px' } },
               h('span', { style: { color: '#888' } }, '当前工程:'),
               h('select', {
                 className: 'dsh-pio-select',
-                style: { flex: 1, minWidth: '240px', maxWidth: '420px', fontFamily: 'monospace' },
+                style: { flex: 1, minWidth: '220px', maxWidth: '380px', fontFamily: 'monospace' },
                 value: projectInfo?.projectPath || projectInfo?.dir || '',
                 disabled: isSwitchingWorkspace,
                 onChange: (e) => handleSwitchWorkspace(e.target.value)
@@ -1678,8 +1756,13 @@ export function createPioWorkbenchComponent(React, Icons) {
               ),
               h('button', {
                 className: 'dsh-pio-btn',
+                onClick: () => openDirPicker('switch-workspace', projectInfo?.dir),
+                title: '自定义浏览并选择工程目录'
+              }, h(Icons.Folder, { size: 11 }), '打开目录...'),
+              h('button', {
+                className: 'dsh-pio-btn',
                 onClick: refreshProjects,
-                title: '扫描 PlatformIO 工程'
+                title: '扫描工作区 PlatformIO 工程'
               }, h(Icons.Refresh, { size: 10 }), '扫描')
             ),
 
@@ -1702,22 +1785,30 @@ export function createPioWorkbenchComponent(React, Icons) {
                 h('div', { style: { fontSize: '12px', color: '#ddd' } },
                   h('strong', { style: { color: '#f39c12' } }, '当前目录未检测到 platformio.ini 配置文件。'),
                   h('div', { style: { fontSize: '11px', color: '#aaa', marginTop: '2px' } },
-                    `目录 [${projectInfo.dir}] 尚未初始化为嵌入式项目。您可以一键在此目录下初始化 PlatformIO 工程。`
+                    `目录 [${projectInfo.dir}] 尚未初始化为嵌入式项目。您可以直接在此目录初始化，或选择已有的工程目录。`
                   )
                 )
               ),
-              h('button', {
-                className: 'dsh-pio-btn dsh-pio-btn-primary',
-                style: { height: '26px', padding: '0 12px', fontSize: '11px', flexShrink: 0 },
-                onClick: () => {
-                  setNewProjectForm(prev => ({
-                    ...prev,
-                    dir: projectInfo.dir,
-                    inPlace: true
-                  }));
-                  setIsNewProjectOpen(true);
-                }
-              }, h(Icons.Plus, { size: 11 }), '在此目录初始化工程')
+              h('div', { style: { display: 'flex', gap: '8px', flexShrink: 0 } },
+                h('button', {
+                  className: 'dsh-pio-btn',
+                  style: { height: '26px', padding: '0 10px', fontSize: '11px' },
+                  onClick: () => openDirPicker('switch-workspace', projectInfo?.dir),
+                  title: '选择电脑上其他已有工程目录'
+                }, h(Icons.Folder, { size: 11 }), '选择已有工程...'),
+                h('button', {
+                  className: 'dsh-pio-btn dsh-pio-btn-primary',
+                  style: { height: '26px', padding: '0 12px', fontSize: '11px' },
+                  onClick: () => {
+                    setNewProjectForm(prev => ({
+                      ...prev,
+                      dir: projectInfo.dir,
+                      inPlace: true
+                    }));
+                    setIsNewProjectOpen(true);
+                  }
+                }, h(Icons.Plus, { size: 11 }), '在此目录初始化工程')
+              )
             ) : null
           ),
 
@@ -2134,13 +2225,22 @@ export function createPioWorkbenchComponent(React, Icons) {
 
             h('div', { className: 'dsh-pio-form-field' },
               h('label', null, '存储路径'),
-              h('input', {
-                type: 'text',
-                className: 'dsh-pio-input',
-                value: newProjectForm.dir,
-                onChange: (e) => setNewProjectForm(prev => ({ ...prev, dir: e.target.value })),
-                placeholder: '目标目录，留空默认为当前工作区'
-              }),
+              h('div', { style: { display: 'flex', gap: '6px' } },
+                h('input', {
+                  type: 'text',
+                  className: 'dsh-pio-input',
+                  style: { flex: 1 },
+                  value: newProjectForm.dir,
+                  onChange: (e) => setNewProjectForm(prev => ({ ...prev, dir: e.target.value })),
+                  placeholder: '目标目录，留空默认为当前工作区'
+                }),
+                h('button', {
+                  type: 'button',
+                  className: 'dsh-pio-btn',
+                  onClick: () => openDirPicker('new-project-dir', newProjectForm.dir || projectInfo?.dir),
+                  title: '浏览并选择目录'
+                }, h(Icons.Folder, { size: 11 }), '浏览...')
+              ),
               h('div', { style: { display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px' } },
                 h('label', { style: { display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: '#ccc', cursor: 'pointer' } },
                   h('input', {
@@ -2404,11 +2504,236 @@ export function createPioWorkbenchComponent(React, Icons) {
       );
     };
 
+    // Render Directory Selector & Filesystem Browser Modal
+    const renderDirPickerModal = () => {
+      const isSwitch = dirPickerMode === 'switch-workspace';
+      const title = isSwitch ? '选择 PlatformIO 工程目录 / 工作区' : '选择新工程目标目录';
+      const desc = isSwitch
+        ? '选择任意包含 platformio.ini 的工程文件夹，或选择任意工作区目录进行工程管理。'
+        : '浏览并选择用于存放新工程的文件夹。';
+
+      return h('div', { className: 'dsh-pio-modal-wrapper' },
+        h('div', { className: 'dsh-pio-modal-backdrop', onClick: () => setIsDirPickerOpen(false) }),
+        h('div', {
+          className: 'dsh-pio-modal-dialog',
+          style: { width: '640px', maxHeight: '85vh', display: 'flex', flexDirection: 'column' },
+          onClick: (e) => e.stopPropagation()
+        },
+          h('div', { className: 'dsh-pio-modal-header' },
+            h('div', { style: { display: 'flex', alignItems: 'center', gap: '8px' } },
+              h(Icons.Folder, { size: 16, style: { color: '#e67e22' } }),
+              h('span', { style: { fontWeight: 600, fontSize: '13px' } }, title)
+            ),
+            h('button', {
+              className: 'dsh-pio-btn',
+              style: { border: 'none', background: 'transparent', padding: '2px 4px' },
+              onClick: () => setIsDirPickerOpen(false)
+            }, h(Icons.Close, { size: 14 }))
+          ),
+
+          h('div', { className: 'dsh-pio-modal-body', style: { padding: '12px', display: 'flex', flexDirection: 'column', gap: '10px', overflowY: 'auto' } },
+            h('div', { style: { fontSize: '12px', color: '#aaa' } }, desc),
+
+            // Top: Path navigation bar (Up button, text input, Go button)
+            h('div', { style: { display: 'flex', alignItems: 'center', gap: '6px' } },
+              h('button', {
+                className: 'dsh-pio-btn',
+                disabled: !dirPickerData.parent || dirPickerLoading,
+                onClick: () => navigateToDir(dirPickerData.parent),
+                title: dirPickerData.parent ? `上一级: ${dirPickerData.parent}` : '无上一级'
+              }, h(Icons.ArrowUp, { size: 12 }), '上一级'),
+              h('input', {
+                type: 'text',
+                className: 'dsh-pio-input',
+                style: { flex: 1, fontFamily: 'Consolas, monospace', fontSize: '12px' },
+                value: dirPickerPathInput,
+                onChange: (e) => {
+                  setDirPickerPathInput(e.target.value);
+                  setDirPickerSelected(e.target.value);
+                },
+                onKeyDown: (e) => {
+                  if (e.key === 'Enter') {
+                    navigateToDir(dirPickerPathInput);
+                  }
+                },
+                placeholder: '输入或粘贴绝对路径...'
+              }),
+              h('button', {
+                className: 'dsh-pio-btn',
+                disabled: dirPickerLoading || !dirPickerPathInput,
+                onClick: () => navigateToDir(dirPickerPathInput),
+                title: '跳转至输入路径'
+              }, '前往')
+            ),
+
+            // Quick Access Chips: Drives & Favorites
+            h('div', { style: { display: 'flex', flexDirection: 'column', gap: '6px' } },
+              h('div', { style: { display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' } },
+                h('span', { style: { fontSize: '11px', color: '#888', marginRight: '4px' } }, '磁盘:'),
+                (dirPickerData.drives || []).map(drive =>
+                  h('button', {
+                    key: drive,
+                    className: 'dsh-pio-btn',
+                    style: { padding: '2px 8px', fontSize: '11px', height: '22px' },
+                    onClick: () => navigateToDir(drive)
+                  }, h(Icons.HardDrive, { size: 10 }), drive)
+                ),
+                h('span', { style: { fontSize: '11px', color: '#888', marginLeft: '6px', marginRight: '4px' } }, '快捷位置:'),
+                (dirPickerData.favorites || []).map(fav =>
+                  h('button', {
+                    key: fav.name,
+                    className: 'dsh-pio-btn',
+                    style: { padding: '2px 8px', fontSize: '11px', height: '22px' },
+                    onClick: () => navigateToDir(fav.path),
+                    title: fav.path
+                  }, fav.name)
+                )
+              ),
+
+              // Recent PlatformIO Projects (if any)
+              (dirPickerData.recentProjects && dirPickerData.recentProjects.length > 0) ? h('div', {
+                style: { display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', marginTop: '2px' }
+              },
+                h('span', { style: { fontSize: '11px', color: '#e67e22', display: 'flex', alignItems: 'center', gap: '4px' } },
+                  h(Icons.History, { size: 10 }), '扫描到的工程:'
+                ),
+                dirPickerData.recentProjects.slice(0, 6).map(rp =>
+                  h('button', {
+                    key: rp.path,
+                    className: 'dsh-pio-btn',
+                    style: {
+                      padding: '2px 8px',
+                      fontSize: '11px',
+                      height: '22px',
+                      borderColor: 'rgba(230, 126, 34, 0.4)',
+                      background: 'rgba(230, 126, 34, 0.08)'
+                    },
+                    onClick: () => {
+                      setDirPickerPathInput(rp.path);
+                      setDirPickerSelected(rp.path);
+                      navigateToDir(rp.path);
+                    },
+                    title: rp.path
+                  }, rp.name)
+                )
+              ) : null
+            ),
+
+            // Directory status notice (e.g. if current is PIO)
+            dirPickerData.isPio ? h('div', {
+              style: {
+                padding: '6px 10px',
+                borderRadius: '4px',
+                background: 'rgba(46, 204, 113, 0.12)',
+                border: '1px solid rgba(46, 204, 113, 0.3)',
+                color: '#2ecc71',
+                fontSize: '11px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }
+            },
+              h(Icons.Check, { size: 12 }),
+              h('span', null, '检测到 platformio.ini 配置文件，当前目录是有效的 PlatformIO 工程！')
+            ) : null,
+
+            // Subdirectories list box
+            h('div', {
+              style: {
+                border: '1px solid var(--dsw-alias-border-l1, rgba(255, 255, 255, 0.1))',
+                borderRadius: '4px',
+                background: 'rgba(0, 0, 0, 0.2)',
+                height: '240px',
+                overflowY: 'auto',
+                padding: '4px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '2px'
+              }
+            },
+              dirPickerLoading ? h('div', { style: { padding: '20px', textAlign: 'center', color: '#888', fontSize: '12px' } }, '正在读取目录...')
+              : (dirPickerData.directories && dirPickerData.directories.length > 0)
+                ? dirPickerData.directories.map(item => {
+                    const isSelected = dirPickerSelected === item.path;
+                    return h('div', {
+                      key: item.path,
+                      className: `dsh-pio-dir-item ${isSelected ? 'selected' : ''} ${item.isPio ? 'is-pio' : ''}`,
+                      onClick: () => {
+                        setDirPickerSelected(item.path);
+                        setDirPickerPathInput(item.path);
+                      },
+                      onDoubleClick: () => navigateToDir(item.path),
+                      title: `双击进入: ${item.path}`
+                    },
+                      h('div', { style: { display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 } },
+                        h(Icons.Folder, { size: 14, style: { color: item.isPio ? '#e67e22' : '#888', flexShrink: 0 } }),
+                        h('span', {
+                          style: {
+                            fontSize: '12px',
+                            fontWeight: item.isPio ? 600 : 400,
+                            color: item.isPio ? '#f39c12' : '#e0e0e0',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap'
+                          }
+                        }, item.name),
+                        item.isPio ? h('span', {
+                          style: {
+                            fontSize: '9px',
+                            padding: '1px 5px',
+                            borderRadius: '3px',
+                            background: 'rgba(230, 126, 34, 0.2)',
+                            color: '#e67e22',
+                            border: '1px solid rgba(230, 126, 34, 0.4)'
+                          }
+                        }, 'PIO 工程') : null
+                      ),
+                      h('div', { style: { display: 'flex', alignItems: 'center', gap: '4px' } },
+                        h('button', {
+                          type: 'button',
+                          className: 'dsh-pio-btn',
+                          style: { padding: '2px 6px', fontSize: '10px', height: '20px' },
+                          onClick: (e) => {
+                            e.stopPropagation();
+                            navigateToDir(item.path);
+                          },
+                          title: '进入子目录'
+                        }, '进入', h(Icons.ChevronRight, { size: 10 }))
+                      )
+                    );
+                  })
+                : h('div', { style: { padding: '20px', textAlign: 'center', color: '#666', fontSize: '12px' } }, '当前目录下无子文件夹')
+            ),
+
+            // Selection info display
+            h('div', { style: { fontSize: '11px', color: '#aaa', display: 'flex', alignItems: 'center', justifyContent: 'space-between' } },
+              h('span', null, '选中路径: ', h('code', { style: { color: '#4ec9b0', fontFamily: 'monospace' } }, dirPickerSelected || dirPickerPathInput || dirPickerData.current || '(无)')),
+              h('span', { style: { color: '#777', fontSize: '10px' } }, '提示: 可双击文件夹直接进入')
+            )
+          ),
+
+          // Footer buttons
+          h('div', { className: 'dsh-pio-modal-footer' },
+            h('button', {
+              className: 'dsh-pio-btn',
+              onClick: () => setIsDirPickerOpen(false)
+            }, '取消'),
+            h('button', {
+              className: 'dsh-pio-btn dsh-pio-btn-primary',
+              disabled: dirPickerLoading || (!dirPickerSelected && !dirPickerPathInput && !dirPickerData.current),
+              onClick: handleConfirmDirPicker
+            }, isSwitch ? '打开此工程 / 目录' : '选择此目录')
+          )
+        )
+      );
+    };
+
     return h('div', { className: 'dsh-pio-workbench', style: { position: 'relative' } },
       renderTopBar(),
       isPySelectorOpen ? renderPySelectorModal() : null,
       isNewProjectOpen ? renderNewProjectModal() : null,
       isAddEnvOpen ? renderAddEnvModal() : null,
+      isDirPickerOpen ? renderDirPickerModal() : null,
       renderSubTabsBar(),
       h('div', { className: 'dsh-pio-body' },
         subTab === 'build' && renderBuildView(),
