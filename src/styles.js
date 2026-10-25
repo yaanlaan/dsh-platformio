@@ -10,10 +10,12 @@ export const PIO_STYLES = `
    ========================================================================== */
 
 .dsh-pio-workbench {
+  container-type: inline-size;
   display: flex;
   flex-direction: column;
   height: 100%;
   width: 100%;
+  max-width: 100%;
   background: var(--dsw-alias-bg-base, #141414);
   color: var(--dsw-alias-label-primary, #cccccc);
   font-family: var(--dsw-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
@@ -34,6 +36,9 @@ export const PIO_STYLES = `
   flex-shrink: 0;
   gap: 6px;
   flex-wrap: wrap;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .dsh-pio-topbar-left,
@@ -42,6 +47,7 @@ export const PIO_STYLES = `
   align-items: center;
   gap: 5px;
   flex-wrap: wrap;
+  max-width: 100%;
 }
 
 .dsh-pio-brand-badge {
@@ -372,8 +378,11 @@ export const PIO_STYLES = `
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 10px;
   box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
 }
 
 .dsh-pio-info-card,
@@ -383,6 +392,10 @@ export const PIO_STYLES = `
   border-radius: var(--dsw-radius-sm, 6px);
   padding: 10px 12px;
   margin-bottom: 10px;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
   transition: border-color 0.15s ease, background 0.15s ease;
 }
 
@@ -400,6 +413,7 @@ export const PIO_STYLES = `
   align-items: center;
   gap: 6px;
   margin-bottom: 8px;
+  flex-wrap: wrap;
 }
 
 .dsh-pio-card-header {
@@ -411,6 +425,8 @@ export const PIO_STYLES = `
   border-bottom: 1px solid var(--dsw-alias-border-l1, rgba(255, 255, 255, 0.08));
   flex-wrap: wrap;
   gap: 6px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .dsh-pio-card-desc {
@@ -420,12 +436,82 @@ export const PIO_STYLES = `
   margin-bottom: 8px;
 }
 
+/* --- Non-PIO Project Guide Banner (Responsive & Never Overflows) --- */
+.dsh-pio-guide-banner {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: var(--dsw-radius-sm, 6px);
+  background: rgba(243, 156, 18, 0.08);
+  border: 1px solid rgba(243, 156, 18, 0.28);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.dsh-pio-guide-banner-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+  width: 100%;
+}
+
+.dsh-pio-guide-banner-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.dsh-pio-guide-banner-desc {
+  font-size: 11px;
+  color: var(--dsw-alias-label-secondary, #aaaaaa);
+  line-height: 1.5;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+}
+
+.dsh-pio-path-code {
+  font-family: var(--dsh-font-family-code-default, "SF Mono", Consolas, monospace);
+  font-size: 10.5px;
+  color: #e0e0e0;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 1px 5px;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  word-break: break-all;
+  overflow-wrap: anywhere;
+  display: inline-block;
+  max-width: 100%;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+
+.dsh-pio-guide-banner-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-left: 24px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
 /* --- Responsive Form Layout --- */
 .dsh-pio-form-grid,
 .dsh-pio-form-row-2col {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 10px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
   width: 100%;
 }
 
@@ -771,8 +857,8 @@ export const PIO_STYLES = `
   border-left: 3px solid #e67e22;
 }
 
-/* --- Media Queries for Narrow Widths / Sidebar --- */
-@media (max-width: 720px) {
+/* --- Responsive Rules for Narrow Panels & Sidebar --- */
+@container (max-width: 620px) {
   .dsh-pio-topbar {
     padding: 3px 6px;
     gap: 4px;
@@ -781,19 +867,56 @@ export const PIO_STYLES = `
   .dsh-pio-topbar-right {
     gap: 4px;
   }
+  .dsh-pio-form-grid,
+  .dsh-pio-form-row-2col {
+    grid-template-columns: 1fr;
+  }
+  .dsh-pio-guide-banner-actions {
+    padding-left: 0;
+  }
+}
+
+@container (max-width: 460px) {
   .dsh-pio-topbar-right .dsh-pio-btn span {
     display: none;
   }
   .dsh-pio-topbar-right .dsh-pio-btn {
-    padding: 3px 5px;
+    padding: 3px 6px;
   }
   .dsh-pio-tab-item {
     padding: 4px 6px;
     font-size: 10px;
   }
+}
+
+@media (max-width: 620px) {
+  .dsh-pio-topbar {
+    padding: 3px 6px;
+    gap: 4px;
+  }
+  .dsh-pio-topbar-left,
+  .dsh-pio-topbar-right {
+    gap: 4px;
+  }
   .dsh-pio-form-grid,
   .dsh-pio-form-row-2col {
     grid-template-columns: 1fr;
+  }
+  .dsh-pio-guide-banner-actions {
+    padding-left: 0;
+  }
+}
+
+@media (max-width: 460px) {
+  .dsh-pio-topbar-right .dsh-pio-btn span {
+    display: none;
+  }
+  .dsh-pio-topbar-right .dsh-pio-btn {
+    padding: 3px 6px;
+  }
+  .dsh-pio-tab-item {
+    padding: 4px 6px;
+    font-size: 10px;
   }
 }
 `;

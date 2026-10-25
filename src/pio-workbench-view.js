@@ -1737,11 +1737,26 @@ export function createPioWorkbenchComponent(React, Icons) {
             ),
 
             // Active Project Workspace Info & Switcher
-            h('div', { style: { display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', fontSize: '12px' } },
-              h('span', { style: { color: '#888' } }, '当前工程:'),
+            h('div', {
+              style: {
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                flexWrap: 'wrap',
+                fontSize: '12px',
+                width: '100%',
+                boxSizing: 'border-box'
+              }
+            },
+              h('span', { style: { color: '#888', flexShrink: 0 } }, '当前工程:'),
               h('select', {
                 className: 'dsh-pio-select',
-                style: { flex: 1, minWidth: '220px', maxWidth: '380px', fontFamily: 'monospace' },
+                style: {
+                  flex: '1 1 180px',
+                  minWidth: '120px',
+                  maxWidth: '100%',
+                  fontFamily: 'monospace'
+                },
                 value: projectInfo?.projectPath || projectInfo?.dir || '',
                 disabled: isSwitchingWorkspace,
                 onChange: (e) => handleSwitchWorkspace(e.target.value)
@@ -1754,42 +1769,36 @@ export function createPioWorkbenchComponent(React, Icons) {
                       return h('option', { key: pPath, value: pPath }, `${p.name} (${pPath})${envText}`);
                     })
               ),
-              h('button', {
-                className: 'dsh-pio-btn',
-                onClick: () => openDirPicker('switch-workspace', projectInfo?.dir),
-                title: '自定义浏览并选择工程目录'
-              }, h(Icons.Folder, { size: 11 }), '打开目录...'),
-              h('button', {
-                className: 'dsh-pio-btn',
-                onClick: refreshProjects,
-                title: '扫描工作区 PlatformIO 工程'
-              }, h(Icons.Refresh, { size: 10 }), '扫描')
+              h('div', { style: { display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0, flexWrap: 'wrap' } },
+                h('button', {
+                  className: 'dsh-pio-btn',
+                  onClick: () => openDirPicker('switch-workspace', projectInfo?.dir),
+                  title: '自定义浏览并选择工程目录'
+                }, h(Icons.Folder, { size: 11 }), '打开目录...'),
+                h('button', {
+                  className: 'dsh-pio-btn',
+                  onClick: refreshProjects,
+                  title: '扫描工作区 PlatformIO 工程'
+                }, h(Icons.Refresh, { size: 10 }), '扫描')
+              )
             ),
 
-            // Non-PIO Project Guide Banner
+            // Non-PIO Project Guide Banner (Responsive & Never Overflows)
             (!projectInfo?.isPio && projectInfo?.dir) ? h('div', {
-              style: {
-                marginTop: '12px',
-                padding: '10px 14px',
-                borderRadius: '6px',
-                background: 'rgba(243, 156, 18, 0.1)',
-                border: '1px solid rgba(243, 156, 18, 0.3)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: '12px'
-              }
+              className: 'dsh-pio-guide-banner'
             },
-              h('div', { style: { display: 'flex', alignItems: 'center', gap: '8px' } },
-                h(Icons.Alert, { size: 16, style: { color: '#f39c12', flexShrink: 0 } }),
-                h('div', { style: { fontSize: '12px', color: '#ddd' } },
-                  h('strong', { style: { color: '#f39c12' } }, '当前目录未检测到 platformio.ini 配置文件。'),
-                  h('div', { style: { fontSize: '11px', color: '#aaa', marginTop: '2px' } },
-                    `目录 [${projectInfo.dir}] 尚未初始化为嵌入式项目。您可以直接在此目录初始化，或选择已有的工程目录。`
+              h('div', { className: 'dsh-pio-guide-banner-header' },
+                h(Icons.Alert, { size: 16, style: { color: '#f39c12', flexShrink: 0, marginTop: '1px' } }),
+                h('div', { className: 'dsh-pio-guide-banner-body' },
+                  h('strong', { style: { color: '#f39c12', fontSize: '12px' } }, '当前目录未检测到 platformio.ini 配置文件'),
+                  h('div', { className: 'dsh-pio-guide-banner-desc' },
+                    '目录 ',
+                    h('code', { className: 'dsh-pio-path-code' }, projectInfo.dir),
+                    ' 尚未初始化为嵌入式项目。您可以直接在此目录初始化，或切换到已有的工程目录。'
                   )
                 )
               ),
-              h('div', { style: { display: 'flex', gap: '8px', flexShrink: 0 } },
+              h('div', { className: 'dsh-pio-guide-banner-actions' },
                 h('button', {
                   className: 'dsh-pio-btn',
                   style: { height: '26px', padding: '0 10px', fontSize: '11px' },
